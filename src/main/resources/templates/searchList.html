@@ -1,0 +1,102 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <th:block th:replace="~{ nav.html :: head-config }"></th:block>
+    <title>Document</title>
+
+    <link href="/main.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{ nav.html::navbar }"></div>
+
+<form th:action="@{/search}" method="GET">
+    <input name="searchText" style="display:inline" th:value="${searchText}">
+    <button type="submit">검색</button>
+</form>
+
+<div class="card" th:each="작명 : ${paging}">
+
+    <img src="https://placehold.co/300">
+    <!--    <img th:src="${paging.image}">  -->
+    <div>
+        <h4 class="line">
+            <a th:href="@{|/detail/${작명.id}|}" th:text="${작명.title}">상품 이름 출력</a>
+        </h4>
+        <p th:text="${작명.price}">상품 가격 출력</p>
+
+        <p sec:authorize="isAuthenticated()" th:text="${작명.displayName}">작성한 사용자 닉네임 출력</p>
+        <p sec:authorize="isAnonymous()">익명의 작성자</p>
+
+        <button th:onclick="|location.href='@{/update/{id}(id=${작명.id})}'|">수정</button>
+        <button th:onclick="|deleteItem(${작명.id})|">삭제</button>
+    </div>
+</div>
+<!-- 페이지 나누는 버튼 및 나눈 방법 -->
+<div class="pagination"  th:if="${paging != null and paging.getTotalPages() > 0}"
+     th:with="start=${(paging.number / 5) * 5 + 1},
+              last=(${start + 4 < paging.totalPages ? start + 4 : paging.totalPages})">
+
+    <span  th:each="pg : ${#numbers.sequence(start, last)}">
+        <a th:href="@{/list/page/{id}(id=${pg})}"
+           th:text="${pg}"
+           th:class="${(paging.number + 1) == pg} ? 'active' : ''">1</a>
+    </span>
+
+</div>
+<script>
+    function deleteItem(id) {
+        // 사용자에게 한 번 물어보기
+        if (!confirm("정말 삭제하시겠습니까?")) return;
+
+        // HTML 헤드에 숨겨둔 토큰 값 가져오는 코드
+        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+
+        // 3. fetch 요청 보내기
+        fetch('/item/' + id, {
+            method: 'DELETE', // Controller의 @DeleteMapping과 매칭
+            headers: {
+                    // 헤더에 토큰 추가 ( 없으면 403 forbidden 에러 발생)
+                [csrfHeader]: csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.status === 200) {
+                // 4. 성공 시 동작
+                alert("삭제되었습니다!");
+                location.reload(); // 새로고침해서 목록 갱신
+            } else {
+                alert("삭제 실패!");
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+<script>
+
+</script>
+
+<!--<button class="btn">버튼</button>-->
+<!--<button class="btn2">버튼2</button>-->
+<!--<script>-->
+<!--    document.querySelectorAll('.btn')[0].addEventListener('click',function(){-->
+<!--        fetch('/test1',{-->
+<!--        method: 'POST',-->
+<!--        headers : {'Content-Type' : 'application/json' },-->
+<!--        body : JSON.stringify({name: 'kim'})-->
+<!--&lt;!&ndash;        body : '전송할데이터' &ndash;&gt;-->
+<!--        })-->
+<!--    })-->
+
+<!--&lt;!&ndash;    query String 문법 &ndash;&gt;-->
+<!--        document.querySelectorAll('.btn2')[0].addEventListener('click',function(){-->
+<!--        fetch('/test2?name=kim&age=20')-->
+<!--    })-->
+<!--</script>-->
+</body>
+</html>

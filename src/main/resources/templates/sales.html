@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>주문 내역</title>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        .total-price {
+            font-weight: bold;
+            color: #d9534f;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            font-size: 1.1em;
+        }
+
+        .btn-home {
+            display: block;
+            width: 200px;
+            margin: 20px auto 0;
+            padding: 10px;
+            text-align: center;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .btn-home:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>📋 주문 내역</h2>
+
+    <table>
+        <thead>
+        <tr>
+<!--            <th>주문번호</th>-->
+            <th>상품명</th>
+            <th>단가</th>
+            <th>수량</th>
+            <th>총 결제금액</th>
+            <th>주문일시</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="sale : ${salesList}" th:if="${not #lists.isEmpty(salesList)}">
+<!--            <td th:text="${sale.id}">1</td>-->
+            <td th:text="${sale.itemName}" style="font-weight: bold; color: #333;">사과</td>
+            <td th:text="${#numbers.formatInteger(sale.price, 0, 'COMMA')} + '원'">10,000원</td>
+            <td th:text="${sale.count} + '개'">2개</td>
+            <td class="total-price" th:text="${#numbers.formatInteger(sale.price * sale.count, 0, 'COMMA')} + '원'">20,000원</td>
+            <td th:text="${#temporals.format(sale.created, 'yyyy-MM-dd HH:mm')}">2024-12-17 14:00</td>
+        </tr>
+
+        <tr th:if="${#lists.isEmpty(salesList)}">
+            <td colspan="6" class="empty-message">주문 내역이 없습니다.</td>
+        </tr>
+        </tbody>
+    </table>
+
+    <a href="/list/page/1" class="btn-home">쇼핑 계속하기</a>
+</div>
+
+</body>
+</html>

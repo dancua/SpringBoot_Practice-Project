@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="/main.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{ nav.html::navbar }"></div>
+<div class="detail">
+    <h4>상세페이지</h4>
+    <img src="https://placehold.co/300">
+    <h4 th:text="${item.title}">금도금 바지</h4>
+    <p th:text="${item.price + '원' }">7억</p>
+</div>
+
+<form th:action="@{/sale}" method="POST">
+    <input name="title" th:value="${item.title}">
+    <input name="price" th:value="${item.price}">
+    <input name="count" placeholder="count">
+    <input type="hidden" name="id" th:value="${item.id}">
+    <button type="submit">주문하기</button>
+</form>
+
+<h4>댓글</h4>
+<div th:each="comment : ${comments}">
+    <p th:text="|${comment.username} : ${comment.content}|"></p>
+</div>
+<div class="pagination">
+    <a th:if="${comments.hasPrevious()}"
+       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number})}">
+        이전
+    </a>
+
+    <span th:text="|${comments.number + 1} / ${comments.totalPages} 페이지|"></span>
+
+    <a th:if="${comments.hasNext()}"
+       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number + 2})}">
+        다음
+    </a>
+</div>
+<form th:action="@{/comment}" method="POST">
+    <input name="content">
+    <input name="parent" th:value="${item.id}" style="display : none">
+    <button type="submit">전송</button>
+</form>
+
+</body>
+</html>

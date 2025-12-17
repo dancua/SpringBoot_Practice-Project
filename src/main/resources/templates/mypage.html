@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="/main.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{ nav.html::navbar }"></div>
+<h4>사용자 페이지</h4>
+
+<div sec:authentication="principal"></div>
+<div sec:authentication="principal.displayName"></div>
+<div sec:authorize="hasAuthority('USER')">
+    <h4>이 사용자의 권한은 "일반" 입니다!</h4>
+</div>
+<div sec:authorize="isAuthenticated()">
+    <h4>로그인 된 상태입니다!</h4>
+</div>
+<div sec:authorize="isAnonymous()">
+    <h4>로그인 해주세요!</h4>
+</div>
+
+</body>
+</html>

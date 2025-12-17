@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <link href="/main.css" rel="stylesheet">
+</head>
+<body>
+<div th:replace="~{ nav.html::navbar }"></div>
+    <form action="/add" method="POST" enctype="multipart/form-data">
+<!-- 서버에서 발급한 랜덤문자를 가져오는 코드. 기능 수행할 때 랜덤문자 없으면 차단당함  -->
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}">
+        <input name="title" placeholder="상품명">
+        <input name="price" placeholder="가격">
+
+        <input type="file" name="imgUrl" onchange="getURL(this)">
+        <button type="submit">전송</button>
+    </form>
+<img src="">
+
+<script>
+    async function getURL(){
+
+<!--   1. 사용자가 이미지를 고르면 서버에 요청을 보내는 코드  -->
+        let name = encodeURIComponent(e.files[0].name)
+
+        <!--        2. 서버는 유저에게 presignedURL 발급 -->
+        let result = await fetch('/presigned-url?filename=' + name)
+        result = await result.text();
+        console.log(result);
+
+<!--    3. 유저는 해당 URL(AWS bucket 주소)로 이미지를 PUT(이미지 저장) 요청-->
+       let userURL =  await fetch(result, {
+        method: 'PUT',
+        body : e.files[0]
+        })
+
+        console.log(userURL);
+        console.log(userURL.url.split("?")[0])
+
+        if(userURL.ok){
+            document.querySelector('img').src = userURL.url.split("?")[0]
+        }
+    }
+</script>
+
+</body>
+</html>

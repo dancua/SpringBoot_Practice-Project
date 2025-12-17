@@ -1,0 +1,28 @@
+<th:block th:fragment="head-config">
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+</th:block>
+
+<div class="nav" th:fragment="navbar">
+    <a class="logo">SpringMall</a>
+
+    <th:block sec:authorize="isAnonymous()">
+        <a href="/login">Login</a>
+        <a href="/register">Register</a>
+    </th:block>
+
+    <th:block sec:authorize="isAuthenticated()">
+        <a href="/list/page/1">List</a>
+        <a href="/write">Write</a>
+
+        <a href="/my-page">
+            <span sec:authentication="principal.displayName"></span>님
+        </a>
+        <a href="/sales">주문 내역</a>
+
+        <form th:action="@{/logout}" method="POST">
+            <button type="submit">Logout</button>
+        </form>
+    </th:block>
+
+</div>
