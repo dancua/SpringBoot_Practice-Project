@@ -23,18 +23,20 @@ public class SalesController {
     private final MemberRepository memberRepository;
 
     @PostMapping("/sale")
-    public String sale(@RequestParam String title,
-                       @RequestParam Integer price,
+    public String sale(@RequestParam Long itemId,
                        @RequestParam Integer count,
                        Authentication auth
                        ){
-        salesService.salesItem(title, price, count, auth);
+        salesService.salesItem(itemId, count, auth);
         return "redirect:/list/page/1";
     }
 
+    // 주문 내역 확인하는 테스트용 코드
     @GetMapping("/sale/all")
     String getSaleAll(Model model, Authentication auth){
-        salesService.getSaleItem();
+//        salesService.getSaleItem();
+        var result = memberRepository.findById(1L);
+        System.out.println(result.get().getSales());
         return "sales";
     }
 

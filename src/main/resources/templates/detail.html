@@ -18,10 +18,15 @@
 </div>
 
 <form th:action="@{/sale}" method="POST">
-    <input name="title" th:value="${item.title}">
-    <input name="price" th:value="${item.price}">
-    <input name="count" placeholder="count">
-    <input type="hidden" name="id" th:value="${item.id}">
+    <div>
+        상품명: <span th:text="${item.title}"></span>
+    </div>
+    <div>
+        가격: <span th:text="${item.price}"></span>
+    </div>
+
+    <input type="hidden" name="itemId" th:value="${item.id}">
+    <input type="number" name="count" placeholder="수량" min="1" value="1">
     <button type="submit">주문하기</button>
 </form>
 
@@ -47,6 +52,8 @@
     <input name="parent" th:value="${item.id}" style="display : none">
     <button type="submit">전송</button>
 </form>
+<script>
 
+</script>
 </body>
 </html>

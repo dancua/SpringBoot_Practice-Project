@@ -1,6 +1,6 @@
 package com.pear.shop.Item;
 
-import com.pear.shop.comment.CommentRepository;
+import com.pear.shop.sales.SalesService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -15,14 +15,24 @@ import java.util.List;
 public class ItemService {
 
     private final ItemRepository itemRepository;
+    private final SalesService salesService;
 
     public void saveItem(String title, Integer price, String name, String image){
         var item = new Item();
         item.setTitle(title);
         item.setPrice(price);
+        item.setCount(10);
+
+
         item.setDisplayName(name);
-        item.setImageURL(String.valueOf(image));
+
+        if(image == null || image.trim().isEmpty()){
+            item.setImageURL("https://placehold.co/300");
+        } else{
+            item.setImageURL(image);
+        }
         itemRepository.save(item);
+
     }
     // fetch 를 이용한 ajax 방식
 //    @PostMapping("/test1")

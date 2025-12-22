@@ -17,6 +17,7 @@ public class Item {
     private Integer price;
     private String displayName;
     private String imageURL;
+    private Integer count;
 
     // object 변수 한번에 출력하는 방법 
     // 해당하는 데이터들을 지정해서 출력

@@ -93,9 +93,10 @@ public class ItemController {
     String add(@RequestParam String title,
                @RequestParam Integer price,
                Authentication auth,
-               @RequestParam(required = false) MultipartFile imgFile) {
-        String imgUrl = "";
-        imgUrl = "/images/" + imgFile.getOriginalFilename();
+               @RequestParam(required = false) String imgUrl) {
+        if(imgUrl == null || imgUrl.isEmpty()){
+            imgUrl = "https://placehold.co/300";
+        }
         itemService.saveItem(title, price, auth.getName(), imgUrl);
         return "redirect:/list/page/1";
     }
