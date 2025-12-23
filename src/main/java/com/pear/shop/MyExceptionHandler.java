@@ -15,7 +15,12 @@ public class MyExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<String> handler(){
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("데이터가 없음 발생!");
+    public ResponseEntity<String> handler(Exception e) {
+        e.printStackTrace();
+
+        // 3. 응답 바디에 실제 에러 메시지를 담아서 보냄
+        // 4. 상태 코드를 500(서버 에러)으로 변경
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("에러 발생 : " + e.getMessage());
     }
 }

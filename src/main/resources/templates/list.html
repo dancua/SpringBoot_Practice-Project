@@ -5,23 +5,20 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <th:block th:replace="~{ nav.html :: head-config }"></th:block>
-    <title>Document</title>
+    <th:block th:replace="~{ nav :: head-config }"></th:block>
+    <title>상품 목록</title>
 
     <link href="/main.css" rel="stylesheet">
 </head>
 <body>
-<div th:replace="~{ nav.html::navbar }"></div>
+<div th:replace="~{ nav :: navbar }"></div>
 
-<form th:action="@{/search}" method="GET">
+<div class="container" style="padding : 20px;">
+
+<form th:action="@{/search}" method="GET" style="margin-bottom: 20px;">
     <input name="searchText" style="display:inline" th:value="${searchText}">
     <button type="submit">검색</button>
 </form>
-
-<!--<div th:if="${items.isEmpty()}">-->
-<!--    <p>등록된 상품이 없습니다. 상품을 작성해주세요!</p>-->
-<!--    <a href="/write">상품 등록하기</a>-->
-<!--</div>-->
 
 <div class="card" th:each="item : ${paging}">
     <img src="https://placehold.co/300">
@@ -29,17 +26,18 @@
         <h4 class="line">
             <a th:href="@{|/detail/${item.id}|}" th:text="${item.title}">상품 이름</a>
         </h4>
-        <p th:text="${item.price}">가격</p>
+        <p th:text="${item.price} + '원'">가격</p>
         <p th:text="${item.displayName}">작성자</p>
 
-        <button th:onclick="|location.href='@{/update/{id}(id=${item.id})}'|">수정</button>
-        <button th:onclick="|deleteItem(${item.id})|">삭제</button>
+            <button th:onclick="|location.href='@{/update/{id}(id=${item.id})}'|">수정</button>
+            <button th:onclick="|deleteItem(${item.id})|">삭제</button>
     </div>
 </div>
 
 <div th:if="${paging.isEmpty()}">
     <p>검색 결과가 없습니다.</p>
 </div>
+
 <!-- 페이지 나누는 버튼 및 나눈 방법 -->
 <div class="pagination" th:if="${!paging.isEmpty()}"
      th:with="start=${(paging.number / 5) * 5 + 1},
@@ -53,56 +51,45 @@
         </a>
     </span>
 </div>
+</div>
 <script>
     function deleteItem(id) {
         // 사용자에게 한 번 물어보기
         if (!confirm("정말 삭제하시겠습니까?")) return;
 
-        // HTML 헤드에 숨겨둔 토큰 값 가져오는 코드
-        const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-        const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+        const token = localStorage.getItem('accessToken');
 
-        // 3. fetch 요청 보내기
+        if(!token){
+            alert('로그인이 필요합니다');
+            location.href='/login';
+            return;
+        }
+
+        //  fetch 요청 보내기
         fetch('/item/' + id, {
             method: 'DELETE', // Controller의 @DeleteMapping과 매칭
             headers: {
-                    // 헤더에 토큰 추가 ( 없으면 403 forbidden 에러 발생)
-                [csrfHeader]: csrfToken,
-                'Content-Type': 'application/json'
+                    // CSRF 대신 Authorization 헤더 사용
+                    'Authorization': 'Bearer ' + token,
+                    'Content-Type': 'application/json'
             }
         })
         .then(response => {
             if (response.status === 200) {
-                // 4. 성공 시 동작
+                // 성공 시 동작
                 alert("삭제되었습니다!");
                 location.reload(); // 새로고침해서 목록 갱신
+            } else if(response.status === 403 || response.status === 401){
+                alert("권한이 없습니다.");
             } else {
-                alert("삭제 실패!");
+                return response.text().then(text => { throw new Error(text) });
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(error => {
+        console.error('Error:', error);
+        alert("삭제 실패" + error.message);
+        });
     }
 </script>
-<script>
-
-</script>
-
-<!--<button class="btn">버튼</button>-->
-<!--<button class="btn2">버튼2</button>-->
-<!--<script>-->
-<!--    document.querySelectorAll('.btn')[0].addEventListener('click',function(){-->
-<!--        fetch('/test1',{-->
-<!--        method: 'POST',-->
-<!--        headers : {'Content-Type' : 'application/json' },-->
-<!--        body : JSON.stringify({name: 'kim'})-->
-<!--&lt;!&ndash;        body : '전송할데이터' &ndash;&gt;-->
-<!--        })-->
-<!--    })-->
-
-<!--&lt;!&ndash;    query String 문법 &ndash;&gt;-->
-<!--        document.querySelectorAll('.btn2')[0].addEventListener('click',function(){-->
-<!--        fetch('/test2?name=kim&age=20')-->
-<!--    })-->
-<!--</script>-->
 </body>
 </html>

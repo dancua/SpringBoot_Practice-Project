@@ -2,6 +2,7 @@ package com.pear.shop.sales;
 
 import com.pear.shop.Member.CustomUser;
 import com.pear.shop.Member.Member;
+import com.pear.shop.Member.MemberRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
@@ -16,19 +17,23 @@ import java.util.List;
 public class SalesService {
 
     private final SalesRepository salesRepository;
+    private final MemberRepository memberRepository;
 
-    public void salesItem(String itemName, Integer price, Integer count, Authentication auth){
-        var sales = new Sales();
-        sales.setItemName(itemName);
-        sales.setPrice(price);
-        sales.setCount(count);
-        CustomUser user = (CustomUser) auth.getPrincipal();
+    public void salesItem(String username, SalesDto dto){
 
-        var member = new Member();
-        member.setId(user.id);
+        // member에 있는 사용자 가져오기
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        // 주문 생성
+        Sales sales = new Sales();
+        sales.setItemName(dto.getItemName());
+        sales.setPrice(dto.getPrice());
+        sales.setCount(dto.getCount());
+
         sales.setMember(member);
-
         salesRepository.save(sales);
+
     }
 
     public void getSaleItem(){
@@ -36,9 +41,9 @@ public class SalesService {
         System.out.println(result);
 
         var salesDto = new SalesDto();
-        salesDto.itemName = result.get(0).getItemName();
-        salesDto.price = result.get(0).getPrice();
-        salesDto.username = result.get(0).getMember().getUsername();
+        salesDto.setItemName(result.get(0).getItemName());
+        salesDto.setPrice(result.get(0).getPrice());
+        salesDto.setUsername(result.get(0).getMember().getUsername());
     }
 
     public List<Sales> getSalesList(Long memberId){

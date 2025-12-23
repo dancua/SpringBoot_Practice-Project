@@ -1,5 +1,7 @@
 package com.pear.shop.Item;
 
+import com.pear.shop.Member.Member;
+import com.pear.shop.Member.MemberRepository;
 import com.pear.shop.comment.CommentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -9,19 +11,26 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ItemService {
 
     private final ItemRepository itemRepository;
+    private final MemberRepository memberRepository;
 
-    public void saveItem(String title, Integer price, String name, String image){
+    public void saveItem(String title, Integer price, String image, String username){
+
+        // 사용자가 지정한 닉네임은 연관관계 매핑을 통해 가져오기
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("로그인 정보가 없습니다."));
+
         var item = new Item();
         item.setTitle(title);
         item.setPrice(price);
-        item.setDisplayName(name);
         item.setImageURL(String.valueOf(image));
+        item.setDisplayName(member.getDisplayName());
         itemRepository.save(item);
     }
     // fetch 를 이용한 ajax 방식
@@ -88,5 +97,19 @@ public class ItemService {
     }
 
 
+    public void checkOwner(Long id, String username) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 상품입니다."));
 
+        Member member = memberRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 사용자입니다."));
+
+        System.out.println(item.getDisplayName());
+        System.out.println(username);
+
+        // 작성자 비교하는 코드
+        if(!item.getDisplayName().equals(username)){
+            throw new IllegalStateException("이 글의 작성자가 아닙니다.");
+        }
+    }
 }

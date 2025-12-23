@@ -1,15 +1,14 @@
 <!doctype html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <title>상세 페이지</title>
     <link href="/main.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="~{ nav.html::navbar }"></div>
+
 <div class="detail">
     <h4>상세페이지</h4>
     <img src="https://placehold.co/300">
@@ -17,36 +16,132 @@
     <p th:text="${item.price + '원' }">7억</p>
 </div>
 
-<form th:action="@{/sale}" method="POST">
-    <input name="title" th:value="${item.title}">
-    <input name="price" th:value="${item.price}">
-    <input name="count" placeholder="count">
-    <input type="hidden" name="id" th:value="${item.id}">
-    <button type="submit">주문하기</button>
-</form>
+<div style="margin-top: 20px; border: 1px solid #ddd; padding: 10px;">
+    <h4>주문하기</h4>
+    <input type="hidden" id="order-title" th:value="${item.title}">
+    <input type="hidden" id="order-price" th:value="${item.price}">
+    <input type="hidden" id="order-id" th:value="${item.id}">
+
+    <input type="number" id="order-count" placeholder="수량 입력">
+    <button onclick="orderItem()">주문하기</button>
+</div>
+
+<hr>
 
 <h4>댓글</h4>
 <div th:each="comment : ${comments}">
     <p th:text="|${comment.username} : ${comment.content}|"></p>
 </div>
+
 <div class="pagination">
     <a th:if="${comments.hasPrevious()}"
-       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number})}">
-        이전
-    </a>
-
+       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number})}">이전</a>
     <span th:text="|${comments.number + 1} / ${comments.totalPages} 페이지|"></span>
-
     <a th:if="${comments.hasNext()}"
-       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number + 2})}">
-        다음
-    </a>
+       th:href="@{/detail/{id}(id=${item.id}, page=${comments.number + 2})}">다음</a>
 </div>
-<form th:action="@{/comment}" method="POST">
-    <input name="content">
-    <input name="parent" th:value="${item.id}" style="display : none">
-    <button type="submit">전송</button>
-</form>
+
+<hr>
+
+<div style="margin-top: 20px;">
+    <h4>댓글 작성</h4>
+    <input type="text" id="comment-content" placeholder="댓글 내용">
+    <input type="hidden" id="comment-parent" th:value="${item.id}">
+    <button onclick="postComment()">전송</button>
+</div>
+
+
+<script>
+    // ---------------------------------------------------------
+    // 1. 주문하기 함수 (Fetch + Token)
+    // ---------------------------------------------------------
+    async function orderItem() {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            location.href = '/login';
+            return;
+        }
+
+        const itemName = document.getElementById('order-itemName').value;
+        const price = document.getElementById('order-price').value;
+        const id = document.getElementById('order-id').value;
+        const count = document.getElementById('order-count').value;
+
+        if (!count) {
+            alert("수량을 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/sale', { // Controller 주소
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token // 토큰 전달
+                },
+                body: JSON.stringify({
+                    id: id,
+                    itemName: itemName,
+                    price: parseInt(price),
+                    count: parseInt(count)
+                })
+            });
+
+            if (response.ok) {
+                alert("주문이 완료되었습니다");
+                location.href = '/sales'; // 주문 후 이동할 곳
+            } else {
+                alert("주문 실패");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("에러 발생");
+        }
+    }
+
+    // ---------------------------------------------------------
+    // 2. 댓글 달기 함수 (Fetch + Token)
+    // ---------------------------------------------------------
+    async function postComment() {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        const content = document.getElementById('comment-content').value;
+        const parentId = document.getElementById('comment-parent').value;
+
+        if (!content) {
+            alert("내용을 입력해주세요.");
+            return;
+        }
+
+        try {
+            const response = await fetch('/comment', { // Controller 주소
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token // 토큰 전달
+                },
+                body: JSON.stringify({
+                    content: content,
+                    parentId: parentId
+                })
+            });
+
+            if (response.ok) {
+                alert("댓글 등록 완료!");
+                location.reload(); // 새로고침해서 댓글 보여주기
+            } else {
+                alert("댓글 등록 실패");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+</script>
 
 </body>
 </html>

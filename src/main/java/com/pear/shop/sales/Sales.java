@@ -20,7 +20,7 @@ public class Sales {
     private Integer price;
     private Integer count;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY) // LAZY : 필요할 때만 가져와줌
     @JoinColumn(
             name="member_id",
             foreignKey = @ForeignKey(ConstraintMode.NO_CONSTRAINT))

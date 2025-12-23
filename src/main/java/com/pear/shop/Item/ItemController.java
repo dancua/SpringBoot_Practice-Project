@@ -56,6 +56,7 @@ public class ItemController {
     @GetMapping("/list/page/{abc}")
     String getListPage(Model model, @PathVariable Integer abc){
         itemService.getPageList(model, abc);
+
         return "list";
     }
 
@@ -75,29 +76,38 @@ public class ItemController {
     }
 
     @GetMapping("/detail/{id}")
-    String detail(@PathVariable Long id, @RequestParam(defaultValue = "1") Integer page, Model model) {
+    String detail(@PathVariable Long id, @RequestParam(defaultValue = "1") Integer page, Model model,
+                  Authentication auth) {
         // @ControllerAdvice 로 예외처리 방법
         // 자바 패키지로 Handler 생성 한 뒤 위 어노테이션 작성하면 된다.
 
-            Page<Comment> comt = commentService.ListComment(id, page - 1);
-            model.addAttribute("comments", comt);
-
+            // 상품 정보 가져오기
             Item result = itemService.detailItem(id);
             model.addAttribute("item", result);
+
+            // 댓글 가져오기
+            Page<Comment> comt = commentService.ListComment(id, page - 1);
+            model.addAttribute("comments", comt);
             return "detail";
     }
 
 
 
     @PostMapping("/add")
-    String add(@RequestParam String title,
-               @RequestParam Integer price,
-               Authentication auth,
-               @RequestParam(required = false) MultipartFile imgFile) {
-        String imgUrl = "";
-        imgUrl = "/images/" + imgFile.getOriginalFilename();
-        itemService.saveItem(title, price, auth.getName(), imgUrl);
-        return "redirect:/list/page/1";
+    @ResponseBody
+    public ResponseEntity<String> add(@RequestBody ItemDto itemDto,
+                                      Authentication auth){
+
+        // auth 에 대한 부재를 확인하는 방어 코드
+        if(auth == null){
+            return ResponseEntity.status(401).body("로그인 정보가 없습니다");
+        }
+
+        // 토큰에서 로그인한 사용자 아이디 가져오기
+        String username = auth.getName();
+
+        itemService.saveItem(itemDto.getTitle(), itemDto.getPrice(),itemDto.getImgUrl(), username);
+        return ResponseEntity.ok("상품 등록 완료");
     }
 
     // @ModelAttribute 사용
@@ -129,10 +139,24 @@ public class ItemController {
     }
 
     @PostMapping("/setUpdate")
-    String setUpdate(Long id, String newTitle, Integer newPrice){
+    @ResponseBody
+    public ResponseEntity<String> setUpdate(@RequestBody ItemDto itemDto, Authentication auth) {
 
-            itemService.updateItem(id, newTitle, newPrice);
-        return "redirect:/list";
+        if (auth == null) {
+            return ResponseEntity.status(401).body("로그인 정보가 없습니다.");
+        }
+
+        // 1. 본인 확인 로직
+         String username = auth.getName();
+         itemService.checkOwner(itemDto.getId(), username);
+
+        // 2. 수정 로직 실행
+        try {
+            itemService.updateItem(itemDto.getId(), itemDto.getTitle(), itemDto.getPrice());
+            return ResponseEntity.ok("수정 성공");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("수정 실패");
+        }
     }
 
     @DeleteMapping("/item/{id}")

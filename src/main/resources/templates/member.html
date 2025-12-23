@@ -5,19 +5,66 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <link href="main.css" rel="stylesheet">
+    <title>회원가입</title>
+    <link href="/main.css" rel="stylesheet">
+    <th:block th:replace="~{ nav :: head-config }"></th:block>
 </head>
 <body>
-<div th:replace="~{ nav.html::navbar }"></div>
-    <h3>회원가입 페이지</h3>
-    <form th:action="@{/setRegister}" method="POST">
-        <div th:if="${errorMessage}" th:text="${errorMessage}" style="color:red;"></div>
-            <input type="text" name="username" placeholder="아이디 입력">
-            <input type="text" name="password" placeholder="비밀번호 입력">
-            <input type="text" name="displayName" placeholder="닉네임 입력">
-            <button type="submit">가입 신청</button>
+<div th:replace="~{ nav :: navbar }"></div>
+
+<div class="container">
+    <h3>회원가입</h3>
+
+    <form onsubmit="return false;">
+        <input type="text" id="username" placeholder="아이디 입력">
+        <input type="password" id="password" placeholder="비밀번호 입력">
+        <input type="text" id="displayName" placeholder="닉네임 입력">
+
+        <button onclick="register()">
+            가입 신청
+        </button>
     </form>
+</div>
+    <script>
+        function register(){
+            const usernameVal = document.getElementById('username').value;
+            const passwordVal = document.getElementById('password').value;
+            const displayNameVal = document.getElementById('displayName').value;
+
+            if(!usernameVal || !passwordVal || !displayNameVal){
+                alert("모든 필드를 입력해주세요");
+                return;
+            }
+
+                //  서버(/signup)으로 JSON 요청
+                fetch('/signup', {
+                    method:'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username : usernameVal,
+                    password : passwordVal,
+                    displayName : displayNameVal
+                })
+            })
+            .then(response => {
+                if(response.ok){
+                    return response.text().then(msg => {
+                        alert(msg || "회원가입이 완료되었습니다");
+                        location.href = '/login';
+                    });
+                } else {
+                    // 회원가입 실패 시 400 번대 에러
+                        return response.text().then(msg => { throw new Error(msg); });
+                    }
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    alert("가입 실패:" + error.message);
+                });
+        }
+    </script>
 
 </body>
 </html>

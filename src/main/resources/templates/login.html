@@ -5,22 +5,79 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <title>JWT 테스트</title>
     <link href="/main.css" rel="stylesheet">
 </head>
 <body>
 <div th:replace="~{ nav.html::navbar }"></div>
-<h4>로그인 페이지</h4>
 
-<div th:if="${param.error}">
-    <h4>아이디나 비밀번호를 다시 입력해주세요!</h4>
-</div>
-
-<form action="/login" method="POST">
-    <input name="username" placeholder="아이디 입력">
-    <input name="password" type="password" placeholder="비밀번호 입력">
-    <button type="submit">로그인</button>
+<h4>JWT 로그인</h4>
+<form onsubmit="return false;">
+    <input name="username" id="username" placeholder="아이디">
+    <input name="password" type="password" id="password" placeholder="비밀번호">
+    <button onclick="loginJWT()">로그인 하기</button>
 </form>
+
+<script>
+
+    // 1. 로그인 요청
+    function loginJWT() {
+        const usernameVal = document.querySelector('#username').value;
+        const passwordVal = document.querySelector('#password').value;
+
+        // 핵심 변경: MemberController의 주소인 '/login/jwt'로 요청
+        fetch('/login/jwt', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                username: usernameVal,
+                password: passwordVal
+            })
+        })
+        .then(response => {
+            if(response.ok){
+                return response.json(); // JSON 응답 파싱
+            } else {
+                return response.text().then(text => { throw new Error(text) });
+            }
+        })
+        .then(data => {
+            console.log("로그인 성공:", data);
+
+            //  토큰 저장 (브라우저 LocalStorage)
+            localStorage.setItem('accessToken', data.accessToken);
+            localStorage.setItem('refreshToken', data.refreshToken);
+
+            // list 페이지로 이동
+           alert("로그인 성공! 상품 페이지로 이동합니다");
+           window.location.href='/list/page/1';
+        })
+        .catch(error => {
+            console.error(error);
+            document.querySelector('#result').innerText = "로그인 실패: " + error.message;
+        });
+    }
+
+    // 2. 로그아웃 요청
+    function logout() {
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        // 서버에 리프레시 토큰 삭제 요청
+        if(refreshToken) {
+            fetch('/logout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token: refreshToken })
+            }).catch(e => console.log("서버 로그아웃 중 에러(무시 가능):", e));
+        }
+
+        // 브라우저에서 토큰 삭제
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+
+        document.querySelector('#result').innerText = "로그아웃 되었습니다.";
+    }
+</script>
 
 </body>
 </html>

@@ -6,15 +6,10 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
-    <link href="main.css" rel="stylesheet">
 </head>
 <body>
-    <div class="card" th:each="작명 : ${notices}">
-        <img src="https://placehold.co/300">
-        <div>
-            <h4 th:text="${작명.title}"></h4>
-            <p th:text="${작명.day}"></p>
-        </div>
-    </div>
+    <h4>쇼핑몰 메인 페이지입니다.</h4>
+    <a href="/register">회원가입하기</a>
+    <a href="/list/page/1">상품 보기</a>
 </body>
 </html>

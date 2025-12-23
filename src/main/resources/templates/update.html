@@ -1,11 +1,9 @@
 <!doctype html>
-<html>
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <title>상품 수정</title>
     <link href="/main.css" rel="stylesheet">
 </head>
 <body>
@@ -13,14 +11,71 @@
 
 <div class="detail">
     <h4>수정페이지</h4>
-    <form action="/setUpdate" method="POST">
-    <img src="https://placehold.co/300">
-        <input type="hidden" name="id" th:value="${item.id}">
-    <label>상품명:<input type="text" th:value="${item.title}" name="newTitle"></label>
-    <label>가격:<input type="text" th:value="${item.price}" name="newPrice"></label>
-        <button type="submit">수정 완료</button>
+    <form onsubmit="return false;">
+        <img src="https://placehold.co/300">
+
+        <input type="hidden" id="edit-id" th:value="${item.id}">
+
+        <label>상품명:
+            <input type="text" id="edit-title" th:value="${item.title}" name="newTitle">
+        </label>
+
+        <label>가격:
+            <input type="text" id="edit-price" th:value="${item.price}" name="newPrice">
+        </label>
+
+        <button type="button" onclick="updateItem()">수정 완료</button>
     </form>
 </div>
+
+<script>
+    async function updateItem() {
+        // 1. 토큰 가져오기
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('로그인이 필요합니다.');
+            location.href = '/login';
+            return;
+        }
+
+        // 2. 입력값 가져오기
+        const id = document.getElementById('edit-id').value;
+        const title = document.getElementById('edit-title').value;
+        const price = document.getElementById('edit-price').value;
+
+        if (!title || !price) {
+            alert("상품명과 가격을 입력해주세요.");
+            return;
+        }
+
+        try {
+            // 3. Fetch 요청 보내기
+            const response = await fetch('/setUpdate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token // 토큰 전달
+                },
+                body: JSON.stringify({
+                    id: id,
+                    title: title,
+                    price: parseInt(price)
+                })
+            });
+
+            if (response.ok) {
+                alert("수정이 완료되었습니다.");
+                location.href = '/detail/' + id; // 수정 후 상세페이지로 이동
+            } else {
+                const errorText = await response.text();
+                alert("수정 실패: " + errorText);
+            }
+        } catch (error) {
+            console.error(error);
+            alert("서버 오류 발생");
+        }
+    }
+</script>
 
 </body>
 </html>

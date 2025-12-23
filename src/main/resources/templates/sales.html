@@ -102,24 +102,78 @@
             <th>주문일시</th>
         </tr>
         </thead>
-        <tbody>
-        <tr th:each="sale : ${salesList}" th:if="${not #lists.isEmpty(salesList)}">
-<!--            <td th:text="${sale.id}">1</td>-->
-            <td th:text="${sale.itemName}" style="font-weight: bold; color: #333;">사과</td>
-            <td th:text="${#numbers.formatInteger(sale.price, 0, 'COMMA')} + '원'">10,000원</td>
-            <td th:text="${sale.count} + '개'">2개</td>
-            <td class="total-price" th:text="${#numbers.formatInteger(sale.price * sale.count, 0, 'COMMA')} + '원'">20,000원</td>
-            <td th:text="${#temporals.format(sale.created, 'yyyy-MM-dd HH:mm')}">2024-12-17 14:00</td>
-        </tr>
-
-        <tr th:if="${#lists.isEmpty(salesList)}">
-            <td colspan="6" class="empty-message">주문 내역이 없습니다.</td>
-        </tr>
+        <tbody id="sales-body">
+            <tr>
+                <td colspan="5" class="empty-message">데이터 불러오는 중...</td>
+            </tr>
         </tbody>
     </table>
-
     <a href="/list/page/1" class="btn-home">쇼핑 계속하기</a>
 </div>
 
+    <script>
+        (async function loadSalesData() {
+            const token = localStorage.getItem('accessToken');
+
+            if(!token){
+                alert("로그인이 필요합니다");
+                location.href= '/login';
+                return;
+            }
+            try {
+                // 서버에 데이터 요청
+                const response = await fetch('/api/sales', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': 'Bearer ' + token
+                    }
+                });
+                if(response.ok){
+                    const list = await response.json();
+                    renderTable(list);
+                } else {
+                    throw new Error("데이터 불러오기 실패");
+                }
+            } catch(error){
+                console.error(error);
+                alert("주문 내역을 불러오는데 실패했습니다.");
+                location.href = '/login';
+            }
+        })();
+
+        // 주문 내역 뽑아오는 코드
+        function renderTable(list){
+            const tbody = document.getElementById('sales-body');
+            tbody.innerHTML = ''; // 주문내역을 출력할 tbody 생성
+
+            if(!list || list.length === 0){
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="empty-message">주문 내역이 없습니다.</td>
+                    </tr>`;
+                return;
+            }
+
+            list.forEach(item => {
+                const row = document.createElement('tr');
+
+                const price = new Intl.NumberFormat('ko-KR').format(item.price);
+                const totalPrice = new Intl.NumberFormat('ko-KR').format(item.price * item.count);
+
+                // 서버에서 날짜 생성
+                // 예를 들어 2025-12-23 14:00:00 형태로 저장
+                let dateStr = item.created ? item.created.replace('T',' ').substring(0, 16) : '-';
+
+                row.innerHTML = `
+                    <td style="font-weight: bold; color: #333;">${item.itemName}</td>
+                    <td>${price}원</td>
+                    <td>${item.count}개</td>
+                    <td class="total-price">${totalPrice}원</td>
+                    <td>${dateStr}</td>
+                    `;
+                    tbody.appendChild(row);
+            });
+        }
+    </script>
 </body>
 </html>

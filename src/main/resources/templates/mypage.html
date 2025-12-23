@@ -2,27 +2,136 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
-    <link href="/main.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지</title>
+    <th:block th:replace="~{ nav :: head-config }"></th:block>
+
+    <style>
+        /* 간단한 마이페이지 스타일링 */
+        .mypage-container {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            background-color: #eee;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+        .user-info h2 { margin: 10px 0; color: #333; }
+        .user-info p { color: #666; margin: 5px 0; }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: white;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-top: 10px;
+        }
+        .guest-message { color: #dc3545; font-weight: bold; }
+    </style>
 </head>
 <body>
-<div th:replace="~{ nav.html::navbar }"></div>
-<h4>사용자 페이지</h4>
 
-<div sec:authentication="principal"></div>
-<div sec:authentication="principal.displayName"></div>
-<div sec:authorize="hasAuthority('USER')">
-    <h4>이 사용자의 권한은 "일반" 입니다!</h4>
+<div th:replace="~{ nav :: navbar }"></div>
+
+<div class="mypage-container">
+
+    <div id="profile-card" style="display: none;">
+        <div class="profile-img">👤</div>
+
+        <div class="user-info">
+            <h2><span id="displayName">사용자</span>님, 안녕하세요!</h2>
+
+            <span id="role-badge" class="badge">권한 없음</span>
+        </div>
+
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+
+        <div style="text-align: left; padding: 0 20px;">
+            <h4>내 활동</h4>
+            <ul>
+                <li>최근 로그인: <span id="login-time">방금 전</span></li>
+                <li>로그인 상태: <span style="color: green; font-weight: bold;">인증됨 (Authenticated)</span></li>
+            </ul>
+        </div>
+    </div>
+
+    <div id="guest-card">
+        <h4 class="guest-message">로그인이 필요한 서비스입니다.</h4>
+        <p>로그인 후 내 정보를 확인하세요.</p>
+        <a href="/login" style="display: inline-block; margin-top: 10px; padding: 10px 20px; background: #333; color: #fff; text-decoration: none; border-radius: 5px;">로그인 하러 가기</a>
+    </div>
+
 </div>
-<div sec:authorize="isAuthenticated()">
-    <h4>로그인 된 상태입니다!</h4>
-</div>
-<div sec:authorize="isAnonymous()">
-    <h4>로그인 해주세요!</h4>
-</div>
+
+<script>
+    (function initMyPage() {
+        const token = localStorage.getItem('accessToken');
+
+        if (token) {
+            // 토큰이 있으면 프로필 보여주고, 게스트 메시지 숨김
+            document.getElementById('profile-card').style.display = 'block';
+            document.getElementById('guest-card').style.display = 'none';
+
+            try {
+                // 토큰 해독
+                const payload = parseJwt(token);
+                console.log("Token Payload:", payload);
+
+                // 정보 채워넣기
+                //  아이디 (subject)
+                if (payload.sub) {
+                    document.getElementById('username').innerText = payload.sub;
+                }
+                //  닉네임 (displayName)
+                if (payload.displayName) {
+                    document.getElementById('displayName').innerText = payload.displayName;
+                }
+                //  권한 (role)
+                if (payload.role) {
+                    const badge = document.getElementById('role-badge');
+                    badge.innerText = payload.role;
+
+                    // 관리자면 색깔 바꾸기 (예시)
+                    if(payload.role === 'ROLE_ADMIN') {
+                        badge.style.backgroundColor = '#dc3545'; // 빨간색
+                    }
+                }
+
+            } catch (e) {
+                console.error("토큰 파싱 에러", e);
+                alert("로그인 정보가 올바르지 않습니다.");
+                location.href = '/login';
+            }
+        } else {
+            // 토큰 없으면 게스트 카드 유지
+        }
+    })();
+
+// 토큰 해독 함수 (재사용)
+    function parseJwt(token) {
+        var base64Url = token.split('.')[1];
+        var base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+
+        var jsonPayload = decodeURIComponent(window.atob(base64).split('').map(function(c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        }).join(''));
+
+        return JSON.parse(jsonPayload);
+    }
+</script>
 
 </body>
 </html>
