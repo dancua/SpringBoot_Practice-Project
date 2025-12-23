@@ -8,6 +8,5 @@
 4. 상세 페이지에서 원하는 상품에 대해 주문 기능 및 해당 사용자가 무엇을 주문했는지 알 수 있는 주문 내역 기능 구현 
 
 feature/jwt-auth
-로그인/회원가입 기능에
-localStorage에 accessToken, refreshToken을 저장한 후
+1. 로그인/회원가입 기능에 localStorage에 accessToken, refreshToken을 저장한 후
 해당 토큰 유무에 따라 서비스를 이용할 수 있는지 판단하는 기능 구현
